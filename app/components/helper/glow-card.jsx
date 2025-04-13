@@ -13,7 +13,8 @@ const GlowCard = ({ children, identifier }) => {
     const CARDS = cardsRef.current;
 
     if (!CONTAINER || !CARDS.length) return;  // Guard for null
-
+ 
+    
     const CONFIG = {
       proximity: 40,
       spread: 80,
