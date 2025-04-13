@@ -6,14 +6,14 @@ const GlowCard = ({ children, identifier }) => {
   const containerRef = useRef(null);  // Ref for the container
   const cardsRef = useRef([]);  // Ref for the cards, using an array to store each card's reference
 
+  // Using useEffect with a guard to ensure this runs only on the client side
   useEffect(() => {
-    if (typeof window === "undefined") return; // Guard for SSR
+    if (typeof window === "undefined") return;  // Guard for SSR
 
     const CONTAINER = containerRef.current;
     const CARDS = cardsRef.current;
 
     if (!CONTAINER || !CARDS.length) return;  // Guard for null
- 
     
     const CONFIG = {
       proximity: 40,
@@ -53,6 +53,7 @@ const GlowCard = ({ children, identifier }) => {
       }
     };
 
+    // Add the event listener after the component is mounted
     window.addEventListener('pointermove', UPDATE);
 
     const RESTYLE = () => {
@@ -68,6 +69,7 @@ const GlowCard = ({ children, identifier }) => {
     RESTYLE();
     UPDATE();
 
+    // Cleanup the event listener on component unmount
     return () => {
       window.removeEventListener('pointermove', UPDATE);
     };
