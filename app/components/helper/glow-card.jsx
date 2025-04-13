@@ -1,15 +1,18 @@
 "use client";
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 const GlowCard = ({ children, identifier }) => {
+  const containerRef = useRef(null);  // Ref for the container
+  const cardsRef = useRef([]);  // Ref for the cards, using an array to store each card's reference
+
   useEffect(() => {
-    if (typeof document === "undefined") return;  // Guard for SSR
+    if (typeof window === "undefined") return; // Guard for SSR
 
-    const CONTAINER = document.querySelector(`.glow-container-${identifier}`);
-    const CARDS = document.querySelectorAll(`.glow-card-${identifier}`);
+    const CONTAINER = containerRef.current;
+    const CARDS = cardsRef.current;
 
-    if (!CONTAINER || !CARDS) return;  // Guard for null
+    if (!CONTAINER || !CARDS.length) return;  // Guard for null
 
     const CONFIG = {
       proximity: 40,
@@ -49,7 +52,7 @@ const GlowCard = ({ children, identifier }) => {
       }
     };
 
-    document.body.addEventListener('pointermove', UPDATE);
+    window.addEventListener('pointermove', UPDATE);
 
     const RESTYLE = () => {
       CONTAINER.style.setProperty('--gap', CONFIG.gap);
@@ -65,13 +68,16 @@ const GlowCard = ({ children, identifier }) => {
     UPDATE();
 
     return () => {
-      document.body.removeEventListener('pointermove', UPDATE);
+      window.removeEventListener('pointermove', UPDATE);
     };
   }, [identifier]);
 
   return (
-    <div className={`glow-container-${identifier} glow-container`}>
-      <article className={`glow-card glow-card-${identifier} h-fit cursor-pointer border border-[#2a2e5a] transition-all duration-300 relative bg-[#101123] text-gray-200 rounded-xl hover:border-transparent w-full`}>
+    <div ref={containerRef} className={`glow-container-${identifier} glow-container`}>
+      <article 
+        ref={(el) => cardsRef.current.push(el)} 
+        className={`glow-card glow-card-${identifier} h-fit cursor-pointer border border-[#2a2e5a] transition-all duration-300 relative bg-[#101123] text-gray-200 rounded-xl hover:border-transparent w-full`}
+      >
         <div className="glows"></div>
         {children}
       </article>
