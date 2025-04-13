@@ -1,10 +1,9 @@
 // @flow strict
-use
+
 
 
 import { personalData } from "@/utils/data/personal-data";
 import Image from "next/image";
-import { use } from "react";
 
 
 function AboutSection() {

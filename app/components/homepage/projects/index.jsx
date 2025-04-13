@@ -1,4 +1,4 @@
-"use client";
+// "use client";
 
 
 import { projectsData } from '@/utils/data/projects-data';
