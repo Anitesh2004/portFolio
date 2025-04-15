@@ -3,18 +3,16 @@
 import { useEffect, useRef } from 'react';
 
 const GlowCard = ({ children, identifier }) => {
-  const containerRef = useRef(null);  // Ref for the container
-  const cardsRef = useRef([]);  // Ref for the cards, using an array to store each card's reference
+  const containerRef = useRef(null);
 
-  // Using useEffect with a guard to ensure this runs only on the client side
   useEffect(() => {
-    if (typeof window === "undefined") return;  // Guard for SSR
+    if (typeof window === "undefined") return;
 
     const CONTAINER = containerRef.current;
-    const CARDS = cardsRef.current;
+    const CARDS = CONTAINER?.querySelectorAll('.glow-card');
 
-    if (!CONTAINER || !CARDS.length) return;  // Guard for null
-    
+    if (!CONTAINER || !CARDS?.length) return;
+
     const CONFIG = {
       proximity: 40,
       spread: 80,
@@ -25,7 +23,7 @@ const GlowCard = ({ children, identifier }) => {
     };
 
     const UPDATE = (event) => {
-      for (const CARD of CARDS) {
+      CARDS.forEach((CARD) => {
         const CARD_BOUNDS = CARD.getBoundingClientRect();
 
         if (
@@ -50,11 +48,8 @@ const GlowCard = ({ children, identifier }) => {
         ANGLE = ANGLE < 0 ? ANGLE + 360 : ANGLE;
 
         CARD.style.setProperty('--start', ANGLE + 90);
-      }
+      });
     };
-
-    // Add the event listener after the component is mounted
-    window.addEventListener('pointermove', UPDATE);
 
     const RESTYLE = () => {
       CONTAINER.style.setProperty('--gap', CONFIG.gap);
@@ -67,9 +62,8 @@ const GlowCard = ({ children, identifier }) => {
     };
 
     RESTYLE();
-    UPDATE();
+    window.addEventListener('pointermove', UPDATE);
 
-    // Cleanup the event listener on component unmount
     return () => {
       window.removeEventListener('pointermove', UPDATE);
     };
@@ -77,8 +71,7 @@ const GlowCard = ({ children, identifier }) => {
 
   return (
     <div ref={containerRef} className={`glow-container-${identifier} glow-container`}>
-      <article 
-        ref={(el) => cardsRef.current.push(el)} 
+      <article
         className={`glow-card glow-card-${identifier} h-fit cursor-pointer border border-[#2a2e5a] transition-all duration-300 relative bg-[#101123] text-gray-200 rounded-xl hover:border-transparent w-full`}
       >
         <div className="glows"></div>
