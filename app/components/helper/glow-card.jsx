@@ -1,14 +1,26 @@
 "use client";
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 
 const GlowCard = ({ children, identifier }) => {
-  const [activeStyles, setActiveStyles] = useState([]);
-  const [angle, setAngle] = useState(0);
   const containerRef = useRef(null);
+
+  // Create a ref for each glow card
+  const cardRefs = useRef([]);
+
+  // Reset cardRefs when the container changes
+  useEffect(() => {
+    if (containerRef.current) {
+      cardRefs.current = Array.from(containerRef.current.children);
+    }
+  }, [identifier]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+
+    const cards = cardRefs.current; // Now use the refs to access the cards directly
+
+    if (!cards.length) return;
 
     const CONFIG = {
       proximity: 40,
@@ -19,66 +31,49 @@ const GlowCard = ({ children, identifier }) => {
       opacity: 0,
     };
 
-    const handlePointerMove = (event) => {
-      const updatedStyles = [];
-      const container = containerRef.current;
-
-      if (!container) return;
-
-      const cards = container.querySelectorAll('.glow-card');
-
+    const UPDATE = (event) => {
       cards.forEach((card) => {
         const rect = card.getBoundingClientRect();
 
-        const inRange =
+        if (
           event?.x > rect.left - CONFIG.proximity &&
           event?.x < rect.left + rect.width + CONFIG.proximity &&
           event?.y > rect.top - CONFIG.proximity &&
-          event?.y < rect.top + rect.height + CONFIG.proximity;
+          event?.y < rect.top + rect.height + CONFIG.proximity
+        ) {
+          card.style.setProperty('--active', 1);
+        } else {
+          card.style.setProperty('--active', CONFIG.opacity);
+        }
 
-        updatedStyles.push({
-          id: card.className,
-          active: inRange ? 1 : CONFIG.opacity,
-          angle: Math.atan2(event.y - (rect.top + rect.height / 2), event.x - (rect.left + rect.width / 2)) * 180 / Math.PI + 90,
-        });
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        let angle = (Math.atan2(event.y - centerY, event.x - centerX) * 180) / Math.PI;
+        if (angle < 0) angle += 360;
+        card.style.setProperty('--start', angle + 90);
       });
-
-      setActiveStyles(updatedStyles);
     };
 
-    const updateContainerStyles = () => {
-      const container = containerRef.current;
-      if (container) {
-        container.style.setProperty('--gap', CONFIG.gap);
-        container.style.setProperty('--blur', CONFIG.blur);
-        container.style.setProperty('--spread', CONFIG.spread);
-        container.style.setProperty('--direction', CONFIG.vertical ? 'column' : 'row');
-      }
+    const RESTYLE = () => {
+      containerRef.current.style.setProperty('--gap', CONFIG.gap);
+      containerRef.current.style.setProperty('--blur', CONFIG.blur);
+      containerRef.current.style.setProperty('--spread', CONFIG.spread);
+      containerRef.current.style.setProperty('--direction', CONFIG.vertical ? 'column' : 'row');
     };
 
-    updateContainerStyles();
-    window.addEventListener('pointermove', handlePointerMove);
+    RESTYLE();
+    window.addEventListener('pointermove', UPDATE);
 
-    return () => {
-      window.removeEventListener('pointermove', handlePointerMove);
-    };
+    return () => window.removeEventListener('pointermove', UPDATE);
   }, [identifier]);
 
   return (
     <div ref={containerRef} className={`glow-container-${identifier} glow-container`}>
-      <article className={`glow-card glow-card-${identifier} h-fit cursor-pointer border border-[#2a2e5a] transition-all duration-300 relative bg-[#101123] text-gray-200 rounded-xl hover:border-transparent w-full`}>
+      <article
+        ref={(el) => cardRefs.current.push(el)} // Assign refs to each card
+        className={`glow-card glow-card-${identifier} h-fit cursor-pointer border border-[#2a2e5a] transition-all duration-300 relative bg-[#101123] text-gray-200 rounded-xl hover:border-transparent w-full`}>
         <div className="glows"></div>
         {children}
-        {activeStyles.map((style, idx) => (
-          <div
-            key={idx}
-            className={style.id}
-            style={{
-              '--active': style.active,
-              '--start': style.angle,
-            }}
-          />
-        ))}
       </article>
     </div>
   );
